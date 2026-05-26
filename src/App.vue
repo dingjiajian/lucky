@@ -1,3 +1,5 @@
+
+
 <template>
   <div class="container">
     <header class="header">
@@ -130,7 +132,7 @@ const tzText = computed(() => {
 .grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: 1fr 1fr;
+  grid-template-rows: minmax(340px, 1fr) minmax(340px, 1fr);
   flex: 1;
   min-height: 0;
   gap: 12px;
@@ -139,7 +141,7 @@ const tzText = computed(() => {
 .span-2 { grid-column: span 2; }
 
 @media (max-width: 1180px) {
-  .grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(4, 1fr); }
+  .grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(4, minmax(320px, 1fr)); }
   .span-2 { grid-column: span 2; }
 }
 @media (max-width: 640px) {

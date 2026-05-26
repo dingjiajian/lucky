@@ -31,48 +31,48 @@
           </div>
         </div>
 
-        <div v-if="chart" class="hourly">
-          <div class="chart-wrap">
-            <svg viewBox="0 0 600 100" preserveAspectRatio="none" class="chart">
-              <defs>
-                <linearGradient id="hourlyGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#ff8fcb" stop-opacity="0.55"/>
-                  <stop offset="100%" stop-color="#7c5cff" stop-opacity="0"/>
-                </linearGradient>
-              </defs>
-              <path :d="chart.areaPath" fill="url(#hourlyGrad)"/>
-              <path :d="chart.linePath" fill="none" stroke="#fff" stroke-width="2"
-                    vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>
-            </svg>
-            <template v-for="(d, i) in chart.data" :key="'t' + i">
-              <span v-if="i === 0 || isLabelHour(i, d)"
-                    class="temp-label"
-                    :style="{ left: chart.xPct[i] + '%', top: chart.yPct[i] + '%' }">
-                {{ Math.round(d.temp) }}°
-              </span>
-            </template>
-          </div>
-          <div class="hour-labels">
-            <template v-for="(d, i) in chart.data" :key="'h' + i">
-              <span v-if="i === 0 || isLabelHour(i, d)"
-                    class="hour-label"
-                    :class="{ now: i === 0 }"
-                    :style="{ left: chart.xPct[i] + '%' }">
-                {{ i === 0 ? '现在' : formatHour(d.time) }}
-              </span>
-            </template>
+        <div class="forecast">
+          <div v-for="(d, i) in forecastDays" :key="i" class="day">
+            <div class="day-name">{{ i === 0 ? '今天' : weekdayShort(d.date) }}</div>
+            <div class="day-emoji">{{ weatherEmoji(d.code) }}</div>
+            <div class="day-temps">
+              <span class="hi">{{ Math.round(d.max) }}°</span>
+              <span class="lo">{{ Math.round(d.min) }}°</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="forecast">
-        <div v-for="(d, i) in forecastDays" :key="i" class="day">
-          <div class="day-name">{{ i === 0 ? '今天' : weekdayShort(d.date) }}</div>
-          <div class="day-emoji">{{ weatherEmoji(d.code) }}</div>
-          <div class="day-temps">
-            <span class="hi">{{ Math.round(d.max) }}°</span>
-            <span class="lo">{{ Math.round(d.min) }}°</span>
-          </div>
+      <div v-if="chart" class="hourly">
+        <div class="chart-wrap">
+          <svg viewBox="0 0 600 100" preserveAspectRatio="none" class="chart">
+            <defs>
+              <linearGradient id="hourlyGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ff8fcb" stop-opacity="0.55"/>
+                <stop offset="100%" stop-color="#7c5cff" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path :d="chart.areaPath" fill="url(#hourlyGrad)"/>
+            <path :d="chart.linePath" fill="none" stroke="#fff" stroke-width="2"
+                  vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+          <template v-for="(d, i) in chart.data" :key="'t' + i">
+            <span v-if="i === 0 || isLabelHour(i, d)"
+                  class="temp-label"
+                  :style="{ left: chart.xPct[i] + '%', top: chart.yPct[i] + '%' }">
+              {{ Math.round(d.temp) }}°
+            </span>
+          </template>
+        </div>
+        <div class="hour-labels">
+          <template v-for="(d, i) in chart.data" :key="'h' + i">
+            <span v-if="i === 0 || isLabelHour(i, d)"
+                  class="hour-label"
+                  :class="{ now: i === 0 }"
+                  :style="{ left: chart.xPct[i] + '%' }">
+              {{ i === 0 ? '现在' : formatHour(d.time) }}
+            </span>
+          </template>
         </div>
       </div>
     </div>
@@ -340,22 +340,34 @@ onMounted(() => {
 }
 .emoji { font-size: 18px; }
 
-.meta { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
-.meta .tag { padding: 2px 7px; font-size: 11px; }
+.meta {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+  margin-top: 2px;
+  justify-content: flex-start;
+}
+.meta .tag {
+  padding: 2px 6px;
+  font-size: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
 
 .forecast {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 6px;
-  margin-top: auto;
+  align-self: center;
 }
 .day {
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 10px;
-  padding: 6px 4px;
+  padding: 8px 4px;
   text-align: center;
   transition: background 0.2s ease;
+  align-self: center;
 }
 .day:hover { background: rgba(255,255,255,0.1); }
 .day-name { font-size: 11px; opacity: 0.7; }
@@ -367,6 +379,7 @@ onMounted(() => {
 .hourly {
   display: flex;
   flex-direction: column;
+  margin-top: auto;
 }
 .chart-wrap {
   position: relative;

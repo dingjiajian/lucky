@@ -1,45 +1,60 @@
 <template>
   <section class="glass card">
     <div class="head">
-      <div class="card-title"><span class="dot"></span> 下一个法定节假日</div>
-      <div v-if="source" class="muted small">{{ source }}</div>
+      <div class="card-title">
+        <span class="dot"></span>
+        {{ view === 'calendar' ? '日历' : '下一个法定节假日' }}
+      </div>
+      <button class="toggle" type="button" @click="toggleView">
+        {{ view === 'calendar' ? '← 节日' : '日历' }}
+      </button>
     </div>
 
-    <div v-if="!loaded" class="muted hint">节假日数据加载中…</div>
+    <Calendar v-if="view === 'calendar'" />
 
     <template v-else>
-      <div v-if="next" class="next">
-        <div class="next-name">{{ next.name }}</div>
-        <div class="value-big">{{ daysTo(next.start) }}</div>
-        <div class="muted">天后开始 · {{ formatDate(next.start) }} 起放 {{ next.length }} 天</div>
-        <div class="bar">
-          <div class="bar-inner" :style="{ width: progressWidth + '%' }"></div>
-        </div>
-      </div>
-      <div v-else class="muted">今年节假日已全部结束 🎉</div>
+      <div v-if="!loaded" class="muted hint">节假日数据加载中…</div>
 
-      <ul class="list">
-        <li v-for="h in upcoming" :key="h.name + h.start" :class="{ past: isPast(h.end) }">
-          <div>
-            <div class="name">{{ h.name }}</div>
-            <div class="muted small">{{ formatDate(h.start) }} ~ {{ formatDate(h.end) }} · {{ h.length }} 天</div>
+      <template v-else>
+        <div v-if="next" class="next">
+          <div class="next-name">{{ next.name }}</div>
+          <div class="value-big">{{ daysTo(next.start) }}</div>
+          <div class="muted">天后开始 · {{ formatDate(next.start) }} 起放 {{ next.length }} 天</div>
+          <div class="bar">
+            <div class="bar-inner" :style="{ width: progressWidth + '%' }"></div>
           </div>
-          <div class="badge">
-            <template v-if="isPast(h.end)">已结束</template>
-            <template v-else-if="isOngoing(h.start, h.end)">假期中</template>
-            <template v-else>{{ daysTo(h.start) }} 天后</template>
-          </div>
-        </li>
-      </ul>
+        </div>
+        <div v-else class="muted">今年节假日已全部结束 🎉</div>
+
+        <ul class="list">
+          <li v-for="h in upcoming" :key="h.name + h.start" :class="{ past: isPast(h.end) }">
+            <div>
+              <div class="name">{{ h.name }}</div>
+              <div class="muted small">{{ formatDate(h.start) }} ~ {{ formatDate(h.end) }} · {{ h.length }} 天</div>
+            </div>
+            <div class="badge">
+              <template v-if="isPast(h.end)">已结束</template>
+              <template v-else-if="isOngoing(h.start, h.end)">假期中</template>
+              <template v-else>{{ daysTo(h.start) }} 天后</template>
+            </div>
+          </li>
+        </ul>
+      </template>
     </template>
   </section>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useHolidays } from '../composables/useHolidays.js'
+import Calendar from './Calendar.vue'
 
-const { loaded, source, holidayBlocks } = useHolidays()
+const { loaded, holidayBlocks } = useHolidays()
+
+const view = ref('list')
+function toggleView() {
+  view.value = view.value === 'list' ? 'calendar' : 'list'
+}
 
 function startOfToday() {
   const d = new Date()
@@ -80,6 +95,19 @@ const progressWidth = computed(() => {
   gap: 8px;
   flex-wrap: wrap;
 }
+
+.toggle {
+  padding: 3px 10px;
+  font-size: 11px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: none;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.toggle:hover { background: rgba(255,255,255,0.18); transform: none; box-shadow: none; }
 
 .next { padding: 2px 0; }
 .next-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
