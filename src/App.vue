@@ -18,11 +18,12 @@
     </header>
 
     <main class="grid">
-      <Weather class="span-2" />
-      <Holidays />
-      <WeekendCard />
-      <Payday class="span-2" />
-      <AnniversaryBook class="span-2" />
+
+      <Weather class="col-3" />
+      <Holidays class="col-5" />
+      <WeekendCard class="col-2" />
+      <Payday class="col-5" />
+      <AnniversaryBook class="col-5" />
     </main>
   </div>
 </template>
@@ -133,21 +134,23 @@ const tzText = computed(() => {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(10, minmax(0, 1fr));
   grid-template-rows: minmax(340px, 1fr) minmax(340px, 1fr);
   flex: 1;
   min-height: 0;
   gap: 12px;
 }
 
-.span-2 { grid-column: span 2; }
+.col-5 { grid-column: span 5; }
+.col-3 { grid-column: span 3; }
+.col-2 { grid-column: span 2; }
 
 @media (max-width: 1180px) {
-  .grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(4, minmax(320px, 1fr)); }
-  .span-2 { grid-column: span 2; }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(320px, 1fr)); }
+  .col-5, .col-3, .col-2 { grid-column: span 2; }
 }
 @media (max-width: 640px) {
   .grid { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-rows: minmax(220px, auto); }
-  .span-2 { grid-column: span 1; }
+  .col-5, .col-3, .col-2 { grid-column: span 1; }
 }
 </style>

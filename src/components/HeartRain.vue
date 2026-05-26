@@ -26,7 +26,7 @@ onMounted(() => {
     style: {
       left: rand(2, 98) + 'vw',
       fontSize: rand(16, 38) + 'px',
-      animationDelay: rand(0, 2.8) + 's',
+      animationDelay: rand(0, 1.8) + 's',
       animationDuration: rand(5, 8) + 's',
       color: `hsl(${rand(330, 360)}, 90%, ${rand(60, 78)}%)`
     }

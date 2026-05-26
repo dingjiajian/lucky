@@ -21,6 +21,11 @@
         <div class="progress">
           <div class="progress-inner" :style="{ width: progress + '%' }"></div>
         </div>
+        <div class="quote-bar">
+          <transition name="fade-slide" mode="out-in">
+            <div :key="currentQuote" class="quote-text">{{ currentQuote }}</div>
+          </transition>
+        </div>
       </div>
 
       <div class="side">
@@ -56,6 +61,31 @@ const now = ref(new Date())
 let timer
 onMounted(() => { timer = setInterval(() => (now.value = new Date()), 1000) })
 onUnmounted(() => clearInterval(timer))
+
+const quotes = [
+  '心动不止一刻，是时时刻刻。',
+  '岁岁年年，只想陪你',
+  '遇见你，是最大的幸运',
+  '朝夕相伴，欢喜不断',
+  '满心欢喜，皆因是你',
+  '谢谢你，给予了我勇敢面对世界的勇气',
+  '和你在一起的每一天都是晴天☀',
+  '未来的路我想和你一起慢慢走',
+  '我们还要去看好多好多风景'
+]
+
+const currentQuote = ref(quotes[Math.floor(Math.random() * quotes.length)])
+let quoteTimer
+
+onMounted(() => {
+  quoteTimer = setInterval(() => {
+    let next
+    do { next = quotes[Math.floor(Math.random() * quotes.length)] } while (next === currentQuote.value)
+    currentQuote.value = next
+  }, 4500)
+})
+
+onUnmounted(() => clearInterval(quoteTimer))
 
 const pad = n => String(n).padStart(2, '0')
 
@@ -103,7 +133,8 @@ function formatNext(d) {
 
 .body {
   display: grid;
-  grid-template-columns: 1.2fr 1fr;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
   gap: 10px;
   flex: 1;
   min-height: 0;
@@ -113,12 +144,12 @@ function formatNext(d) {
   background: linear-gradient(135deg, rgba(255, 105, 180, 0.18), rgba(124, 92, 255, 0.14));
   border: 1px solid rgba(255, 105, 180, 0.3);
   border-radius: 14px;
-  padding: 14px;
+  padding: 12px 14px;
   text-align: center;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .anni-name {
@@ -222,6 +253,39 @@ function formatNext(d) {
   background: rgba(255, 105, 180, 0.2);
   border: 1px solid rgba(255, 105, 180, 0.4);
   white-space: nowrap;
+}
+
+.quote-bar {
+  margin-top: 6px;
+  min-height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.quote-text {
+  font-size: 11px;
+  color: #ffc4e1;
+  opacity: 0.9;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  text-shadow: 0 0 8px rgba(255, 105, 180, 0.4);
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.5s ease;
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 
 @media (max-width: 720px) {

@@ -36,27 +36,44 @@
         <div class="num">{{ d.day }}</div>
         <div v-if="d.anni" class="anni-label">{{ d.anni.name }}</div>
         <div v-else-if="d.festival" class="festival">{{ d.festival }}</div>
+        <div v-else-if="d.lunarShort" class="lunar">{{ d.lunarShort }}</div>
         <span v-if="d.status === 'off'" class="tag tag-off">休</span>
         <span v-else-if="d.status === 'work'" class="tag tag-work">班</span>
       </div>
     </div>
 
-    <div class="footer">
-      <template v-if="selectedInfo">
-        <span>{{ selectedInfo.dateText }}</span>
-        <span v-if="selectedInfo.anni" class="hl">· {{ selectedInfo.anni.name }} ♥</span>
-        <span v-else-if="selectedInfo.festival" class="hl">· {{ selectedInfo.festival }}</span>
-      </template>
-      <template v-else-if="nextHoliday">
-        距离 <strong>{{ nextHoliday.name }}</strong> 还有
-        <span class="hl">{{ daysToNext }}</span> 天
-      </template>
+    <div class="detail" v-if="detail">
+      <div class="detail-top">
+        <div class="lunar-block">
+          <div class="lunar-md">{{ detail.lunarMonthDay }}</div>
+          <div class="lunar-gz muted">{{ detail.ganZhiYear }}年 {{ detail.shengXiao }}</div>
+        </div>
+        <div class="yiji">
+          <div class="yiji-row">
+            <span class="yj-badge yj-yi">宜</span>
+            <span class="yj-items">{{ detail.yiText || '—' }}</span>
+          </div>
+          <div class="yiji-row">
+            <span class="yj-badge yj-ji">忌</span>
+            <span class="yj-items">{{ detail.jiText || '—' }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="detail-bottom">
+        <span class="clock-i">⏱</span>
+        <template v-if="nextHoliday">
+          距离 <strong>{{ viewYear }}年{{ nextHoliday.name }}</strong> 还有
+          <span class="hl">{{ daysToNext }}</span> 天
+        </template>
+        <template v-else>{{ detail.dateText }}</template>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
+import { Solar } from 'lunar-javascript'
 import { useHolidays } from '../composables/useHolidays.js'
 import { useAnniversaries } from '../composables/useAnniversaries.js'
 
@@ -70,7 +87,7 @@ const todayTs = today.getTime()
 
 const viewYear = ref(today.getFullYear())
 const viewMonth = ref(today.getMonth())
-const selectedKey = ref('')
+const selectedKey = ref(ymd(today))
 
 function prevMonth() {
   if (viewMonth.value === 0) { viewYear.value--; viewMonth.value = 11 }
@@ -94,7 +111,16 @@ function ymd(d) {
 }
 
 function selectCell(d) {
-  selectedKey.value = selectedKey.value === d.key ? '' : d.key
+  selectedKey.value = d.key
+}
+
+function getLunarShort(date) {
+  const lunar = Solar.fromDate(date).getLunar()
+  const jq = lunar.getJieQi() // 节气名（如 立夏），无则空串
+  if (jq) return jq
+  const dayCn = lunar.getDayInChinese() // 初一/廿一/三十
+  if (dayCn === '初一') return lunar.getMonthInChinese() + '月'
+  return dayCn
 }
 
 const days = computed(() => {
@@ -121,18 +147,27 @@ const days = computed(() => {
       isWeekend: dow === 0 || dow === 6,
       status: statusOf(key),
       festival: holidayStarts.get(key),
-      anni: lookup(d)
+      anni: lookup(d),
+      lunarShort: getLunarShort(d)
     })
   }
   return out
 })
 
-const selectedInfo = computed(() => {
+const detail = computed(() => {
   if (!selectedKey.value) return null
   const cell = days.value.find(d => d.key === selectedKey.value)
   if (!cell) return null
+  const lunar = Solar.fromDate(cell.date).getLunar()
+  const yi = lunar.getDayYi() || []
+  const ji = lunar.getDayJi() || []
   return {
     dateText: `${cell.date.getFullYear()}年${cell.date.getMonth() + 1}月${cell.date.getDate()}日`,
+    lunarMonthDay: lunar.getMonthInChinese() + '月' + lunar.getDayInChinese(),
+    ganZhiYear: lunar.getYearInGanZhi(),
+    shengXiao: lunar.getYearShengXiao(),
+    yiText: yi.slice(0, 10).join('.'),
+    jiText: ji.slice(0, 8).join('.'),
     anni: cell.anni,
     festival: cell.festival
   }
@@ -162,6 +197,9 @@ const daysToNext = computed(() => {
   gap: 6px;
   flex: 1;
   min-height: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
   isolation: isolate;
 }
 
@@ -234,6 +272,8 @@ const daysToNext = computed(() => {
   text-align: center;
   font-size: 11px;
   opacity: 0.6;
+  width: 100%;
+  max-width: 100%;
 }
 .weekdays .weekend { color: #ff8fcb; opacity: 0.85; }
 
@@ -244,6 +284,8 @@ const daysToNext = computed(() => {
   gap: 2px;
   flex: 1;
   min-height: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 .cell {
@@ -321,7 +363,7 @@ const daysToNext = computed(() => {
 .cell.anni-birthday .num,
 .cell.anni-love .num { color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.4); }
 
-.festival, .anni-label {
+.festival, .anni-label, .lunar {
   font-size: 9px;
   line-height: 1.1;
   margin-top: 2px;
@@ -334,6 +376,8 @@ const daysToNext = computed(() => {
   z-index: 1;
 }
 .festival { color: #ff8fcb; }
+.lunar { opacity: 0.55; font-size: 9px; }
+.cell.today .lunar { opacity: 0.85; }
 .anni-label {
   color: #fff;
   font-weight: 600;
@@ -354,20 +398,111 @@ const daysToNext = computed(() => {
 .tag-off { background: #e74c3c; color: #fff; }
 .tag-work { background: #888; color: #fff; }
 
-.footer {
-  font-size: 11px;
-  opacity: 0.85;
-  text-align: center;
-  padding-top: 4px;
-  border-top: 1px solid rgba(255,255,255,0.06);
+.detail {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 8px;
   display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detail-top {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+}
+
+.lunar-block {
+  flex: 0 0 78px;
+  width: 78px;
+  text-align: left;
+  overflow: hidden;
+}
+.lunar-md {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.lunar-gz {
+  font-size: 10px;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.yiji {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.yiji-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.3;
+}
+.yj-badge {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 11px;
+}
+.yj-yi { background: rgba(231, 76, 60, 0.85); color: #fff; }
+.yj-ji { background: rgba(100, 110, 130, 0.85); color: #fff; }
+.yj-items {
+  flex: 1 1 0;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.85;
+}
+
+.detail-bottom {
+  display: flex;
+  align-items: center;
   justify-content: center;
   gap: 6px;
-  flex-wrap: wrap;
+  font-size: 11px;
+  opacity: 0.75;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255,255,255,0.05);
 }
-.footer .hl {
+.clock-i { opacity: 0.7; }
+.detail-bottom .hl {
   color: #ff8fcb;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  padding: 0 2px;
+}
+
+@media (max-width: 640px) {
+  .grid { gap: 1px; }
+  .cell { padding: 1px; border-radius: 4px; }
+  .num { font-size: 12px; }
+  .festival, .anni-label, .lunar { font-size: 8px; }
+  .heart { font-size: 28px; }
+  .cell.anni-love .heart { font-size: 32px; }
+  .tag { font-size: 8px; padding: 0 2px; }
+
+  .detail-top { gap: 6px; }
+  .lunar-block { flex: 0 0 64px; width: 64px; }
+  .lunar-md { font-size: 12px; }
+  .lunar-gz { font-size: 9px; }
+  .yiji-row { font-size: 10px; gap: 4px; }
+  .yj-badge { flex: 0 0 16px; width: 16px; height: 16px; font-size: 10px; }
+  .detail-bottom { font-size: 10px; gap: 4px; flex-wrap: wrap; }
 }
 </style>
