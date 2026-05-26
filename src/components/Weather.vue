@@ -32,7 +32,10 @@
         </div>
 
         <div class="forecast">
-          <div v-for="(d, i) in forecastDays" :key="i" class="day">
+          <div v-for="(d, i) in forecastDays" :key="i"
+               class="day"
+               :class="{ active: selectedDayIndex === i }"
+               @click="selectedDayIndex = i">
             <div class="day-name">{{ i === 0 ? '今天' : weekdayShort(d.date) }}</div>
             <div class="day-emoji">{{ weatherEmoji(d.code) }}</div>
             <div class="day-temps">
@@ -44,6 +47,7 @@
       </div>
 
       <div v-if="chart" class="hourly">
+        <div class="hourly-title">{{ selectedDayLabel }}</div>
         <div class="chart-wrap">
           <svg viewBox="0 0 600 100" preserveAspectRatio="none" class="chart">
             <defs>
@@ -68,9 +72,9 @@
           <template v-for="(d, i) in chart.data" :key="'h' + i">
             <span v-if="i === 0 || isLabelHour(i, d)"
                   class="hour-label"
-                  :class="{ now: i === 0 }"
+                  :class="{ now: i === 0 && selectedDayIndex === 0 }"
                   :style="{ left: chart.xPct[i] + '%' }">
-              {{ i === 0 ? '现在' : formatHour(d.time) }}
+              {{ i === 0 && selectedDayIndex === 0 ? '现在' : formatHour(d.time) }}
             </span>
           </template>
         </div>
@@ -89,6 +93,7 @@ const current = ref(null)
 const daily = ref(null)
 const hourly = ref(null)
 const locationLabel = ref('')
+const selectedDayIndex = ref(0)
 
 const forecastDays = computed(() => {
   if (!daily.value) return []
@@ -110,17 +115,35 @@ const hourlyData = computed(() => {
   const codes = hourly.value.weather_code || []
   const pops = hourly.value.precipitation_probability || []
   if (t.length === 0) return []
-  const nowTs = Date.now()
+
   let start = 0
-  for (let i = 0; i < t.length; i++) {
-    if (new Date(t[i]).getTime() >= nowTs) { start = Math.max(0, i - 1); break }
+  if (selectedDayIndex.value === 0) {
+    const nowTs = Date.now()
+    for (let i = 0; i < t.length; i++) {
+      if (new Date(t[i]).getTime() >= nowTs) { start = Math.max(0, i - 1); break }
+    }
+  } else {
+    const dayStr = daily.value?.time?.[selectedDayIndex.value]
+    if (dayStr) {
+      start = t.findIndex(iso => iso.startsWith(dayStr))
+      if (start === -1) start = 0
+    }
   }
+
   return t.slice(start, start + HOURS).map((iso, i) => ({
     time: new Date(iso),
     temp: temps[start + i],
     code: codes[start + i],
     pop: pops[start + i] ?? 0
   }))
+})
+
+const selectedDayLabel = computed(() => {
+  if (selectedDayIndex.value === 0) return '未来24小时'
+  const d = forecastDays.value[selectedDayIndex.value]
+  if (!d) return ''
+  const date = new Date(d.date)
+  return `${date.getMonth() + 1}月${date.getDate()}日 ${weekdayShort(d.date)} 24小时`
 })
 
 function smoothPath(pts) {
@@ -237,6 +260,7 @@ async function fetchWeather(lat, lon, label) {
     daily.value = data.daily
     hourly.value = data.hourly
     locationLabel.value = label
+    selectedDayIndex.value = 0
   } catch (e) {
     error.value = e.message || '加载失败'
   } finally {
@@ -311,9 +335,10 @@ onMounted(() => {
 
 .main {
   display: grid;
-  grid-template-columns: minmax(160px, 0.85fr) 1.5fr;
+  grid-template-columns: minmax(160px, 0.85fr) minmax(0, 1.5fr);
   gap: 16px;
   align-items: center;
+  min-width: 0;
 }
 
 .now-left { display: flex; flex-direction: column; gap: 4px; }
@@ -366,10 +391,15 @@ onMounted(() => {
   border-radius: 10px;
   padding: 8px 4px;
   text-align: center;
-  transition: background 0.2s ease;
-  align-self: center;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+  user-select: none;
 }
 .day:hover { background: rgba(255,255,255,0.1); }
+.day.active {
+  background: rgba(124, 92, 255, 0.3);
+  border-color: rgba(124, 92, 255, 0.6);
+}
 .day-name { font-size: 11px; opacity: 0.7; }
 .day-emoji { font-size: 18px; margin: 1px 0; }
 .day-temps { font-size: 12px; }
@@ -380,6 +410,12 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   margin-top: auto;
+}
+.hourly-title {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-bottom: 4px;
+  text-align: center;
 }
 .chart-wrap {
   position: relative;

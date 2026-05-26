@@ -19,8 +19,8 @@
 
     <main class="grid">
 
-      <Weather class="col-3" />
-      <Holidays class="col-5" />
+      <Weather class="col-4" />
+      <Holidays class="col-4" />
       <WeekendCard class="col-2" />
       <Payday class="col-5" />
       <AnniversaryBook class="col-5" />
@@ -141,7 +141,9 @@ const tzText = computed(() => {
   gap: 12px;
 }
 
+.grid > * { min-width: 0; }
 .col-5 { grid-column: span 5; }
+.col-4 { grid-column: span 4; }
 .col-3 { grid-column: span 3; }
 .col-2 { grid-column: span 2; }
 
