@@ -2,6 +2,7 @@
 
 <template>
   <div class="container">
+    <HeartRain />
     <header class="header">
       <div class="header-left">
         <div class="brand">
@@ -21,7 +22,7 @@
       <Holidays />
       <WeekendCard />
       <Payday class="span-2" />
-      <Retirement class="span-2" />
+      <AnniversaryBook class="span-2" />
     </main>
   </div>
 </template>
@@ -32,7 +33,8 @@ import Weather from './components/Weather.vue'
 import Holidays from './components/Holidays.vue'
 import WeekendCard from './components/WeekendCard.vue'
 import Payday from './components/Payday.vue'
-import Retirement from './components/Retirement.vue'
+import AnniversaryBook from './components/AnniversaryBook.vue'
+import HeartRain from './components/HeartRain.vue'
 
 const now = ref(new Date())
 let timer
