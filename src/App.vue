@@ -8,7 +8,7 @@
           <span class="logo">✦</span>
           <span>Life Dashboard</span>
         </div>
-        <h1 class="title">{{ greeting }}，今天是 {{ todayStr }} · {{ lunarOrWeek }}</h1>
+        <h1 class="title">{{ greeting }}，今天是 {{ todayStr }} · {{ lunarOrWeek }} 欢迎访问刘淑珍的生活仪表盘</h1>
       </div>
       <div class="clock glass">
         <div class="time">{{ clock }}</div>
