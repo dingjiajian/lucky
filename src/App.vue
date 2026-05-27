@@ -148,11 +148,16 @@ const tzText = computed(() => {
 .col-2 { grid-column: span 2; }
 
 @media (max-width: 1180px) {
-  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(320px, 1fr)); }
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: none;
+    grid-auto-rows: minmax(320px, auto);
+  }
+  .col-4 { grid-column: span 1; }
   .col-5, .col-3, .col-2 { grid-column: span 2; }
 }
-@media (max-width: 640px) {
-  .grid { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-rows: minmax(220px, auto); }
-  .col-5, .col-3, .col-2 { grid-column: span 1; }
+@media (max-width: 720px) {
+  .grid { grid-template-columns: 1fr; grid-auto-rows: minmax(220px, auto); }
+  .col-5, .col-4, .col-3, .col-2 { grid-column: span 1; }
 }
 </style>
